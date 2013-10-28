@@ -1,0 +1,35 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_footer"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/widget_bar_bg_n"
+    android:gravity="center_vertical"
+    android:orientation="horizontal" >
+
+    <RadioButton
+        android:id="@+id/main_footer_news"
+        style="@style/main_footer_radio"
+        android:drawableTop="@drawable/widget_bar_news" />
+
+    <RadioButton
+        android:id="@+id/main_footer_question"
+        style="@style/main_footer_radio"
+        android:drawableTop="@drawable/widget_bar_question" />
+
+    <RadioButton
+        android:id="@+id/main_footer_tweet"
+        style="@style/main_footer_radio"
+        android:drawableTop="@drawable/widget_bar_tweet" />
+
+    <RadioButton
+        android:id="@+id/main_footer_active"
+        style="@style/main_footer_radio"
+        android:drawableTop="@drawable/widget_bar_active" />
+    
+    <RadioButton
+        android:id="@+id/main_footer_more"
+        style="@style/main_footer_radio"
+        android:drawableTop="@drawable/widget_bar_more" />
+
+</LinearLayout>
