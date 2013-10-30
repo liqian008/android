@@ -1,18 +1,40 @@
 package com.bruce.android.app.activity;
 
-import com.bruce.android.R;
-import com.bruce.android.app.utils.UIHelper;
-import com.bruce.android.app.view.ScrollLayout;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Random;
 
-import android.os.Bundle;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.Activity;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.RadioButton;
+import android.widget.TextView;
+import android.widget.Toast;
 
-public class Main extends Activity {
+import com.bruce.android.R;
+import com.bruce.android.app.AppContext;
+import com.bruce.android.app.AppException;
+import com.bruce.android.app.adapter.ListViewAdapter;
+import com.bruce.android.app.bean.RowItem;
+import com.bruce.android.app.net.ApiClient;
+import com.bruce.android.app.utils.UIHelper;
+import com.bruce.android.app.view.PullToRefreshListView;
+import com.bruce.android.app.view.PullToRefreshListView.OnRefreshListener;
+import com.bruce.android.app.view.ScrollLayout;
+
+public class Main extends BaseActivity {
 
 	private static final String TAG = "Main";
 
@@ -21,12 +43,68 @@ public class Main extends Activity {
 	private int mViewCount;
 	protected int mCurSel;
 
+	private PullToRefreshListView jokesLv;
+	private List<RowItem> jokesData = new ArrayList<RowItem>();
+
+	
+	private static final String nhxhJsonUrl = "http://www.toutiao.com/api/essay/recent/recent?tag=joke&count=20";
+
+	private Handler handler = new Handler() {
+		public void handleMessage(android.os.Message msg) {
+			switch (msg.what) {
+			case 0: {
+				break;
+			}
+			case 1: {
+				List<RowItem> itemList = (List<RowItem>) msg.obj;
+				jokesData.clear();
+				jokesData.addAll(itemList);
+				ListViewAdapter listAdapter = new ListViewAdapter(Main.this,
+						itemList);
+				jokesLv.setAdapter(listAdapter);
+				jokesLv.onRefreshComplete();
+				break;
+			}
+			default: {
+				break;
+			}
+			}
+		};
+
+	};
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
-
+		initViews();
 		initPageScroll();
+		initData();
+	}
+
+	private void initViews() {
+		jokesLv = (PullToRefreshListView) findViewById(R.id.frame_listview_news);
+		jokesLv.setOnRefreshListener(new OnRefreshListener() {
+			@Override
+			public void onRefresh() {
+				Log.v(TAG, "onRefresh");
+				loadNewsList(handler);
+			}
+		});
+		
+		jokesLv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				// 点击头部、底部栏无效
+				if (position == 0)
+					return;
+				TextView itemTitleView = (TextView) view.findViewById(R.id.news_listitem_title);
+				RowItem rowItem = (RowItem) itemTitleView.getTag();
+//				Log.v(TAG, "rowItem: "+rowItem);
+				// 跳转到新闻详情
+				UIHelper.showJokeDetail(view.getContext(), rowItem);
+			}
+		});
 	}
 
 	/**
@@ -34,7 +112,6 @@ public class Main extends Activity {
 	 */
 	private void initPageScroll() {
 		mScrollLayout = (ScrollLayout) findViewById(R.id.main_scroll_layout);
-
 		LinearLayout linearLayout = (LinearLayout) findViewById(R.id.main_footer);
 		mViewCount = mScrollLayout.getChildCount();
 		mButtons = new RadioButton[mViewCount];
@@ -46,29 +123,8 @@ public class Main extends Activity {
 			mButtons[i].setOnClickListener(new View.OnClickListener() {
 				public void onClick(View v) {
 					int pos = (Integer) (v.getTag());
-					// 点击当前项刷新
-					// if (mCurSel == pos) {
-					// switch (pos) {
-					// case 0:// 资讯+博客
-					// if (lvNews.getVisibility() == View.VISIBLE)
-					// lvNews.clickRefresh();
-					// else
-					// lvBlog.clickRefresh();
-					// break;
-					// case 1:// 问答
-					// lvQuestion.clickRefresh();
-					// break;
-					// case 2:// 动弹
-					// lvTweet.clickRefresh();
-					// break;
-					// case 3:// 动态+留言
-					// if (lvActive.getVisibility() == View.VISIBLE)
-					// lvActive.clickRefresh();
-					// else
-					// lvMsg.clickRefresh();
-					// break;
-					// }
-					// }
+					Log.v(TAG, "pos: " + pos);
+					Log.v(TAG, "mCurSel: " + mCurSel);
 					mScrollLayout.snapToScreen(pos);
 				}
 			});
@@ -80,12 +136,21 @@ public class Main extends Activity {
 
 		mScrollLayout
 				.setOnViewChangeListener(new ScrollLayout.OnViewChangeListener() {
-					public void OnViewChange(int viewIndex) {
+					public void onViewChange(int viewIndex) {
 						Log.v(TAG, "viewChange!");
-						// 切换列表视图-如果列表数据为空：加载数据
 						setCurPoint(viewIndex);
+						// 切换列表视图-如果列表数据为空：加载数据
+						if(jokesData.isEmpty()){
+							jokesLv.clickRefresh();
+						}
 					}
 				});
+	}
+
+	private void initData() {
+		if (jokesData.isEmpty()) {
+			loadNewsList(handler);
+		}
 	}
 
 	/**
@@ -120,6 +185,56 @@ public class Main extends Activity {
 			flag = super.onKeyDown(keyCode, event);
 		}
 		return flag;
+	}
+
+	/**
+	 * 加载列表数据
+	 */
+	private void loadNewsList(final Handler handler) {
+
+		new Thread(new Runnable() {
+			
+
+			@Override
+			public void run() {
+				try {
+
+					String response = ApiClient.http_get_string(
+							(AppContext) getApplication(),
+							nhxhJsonUrl);
+//					Log.v(TAG, "response: " + response);
+					List<RowItem> itemList = null;
+					try {
+						JSONObject dataJson = new JSONObject(response);
+						JSONArray jokeArray = dataJson.getJSONArray("data");
+//						Log.v(TAG, "jokeArray: " + jokeArray);
+						
+						if(jokeArray!=null&&jokeArray.length()>0){
+							itemList = new ArrayList<RowItem>();
+							for(int i=0;i<jokeArray.length();i++){
+								JSONObject joke = jokeArray.getJSONObject(i);
+								String title = joke.getString("text");
+								String author = joke.getString("tag_name");
+								String date = joke.getString("datetime");
+								int count = joke.getInt("bury_count");
+								RowItem item = new RowItem(title, author, date, count);
+								itemList.add(item);
+							}
+						}
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+					
+					Message message = handler.obtainMessage();
+					message.what = 1;
+					message.obj = itemList;
+					message.sendToTarget();
+				} catch (AppException e) {
+					e.printStackTrace();
+				}
+
+			}
+		}).start();
 	}
 
 }

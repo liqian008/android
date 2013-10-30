@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:background="@color/graywhite"
     android:orientation="vertical" >
 
     <LinearLayout
@@ -36,5 +37,23 @@
             android:text="@string/frame_title_news_recommend" />
     </LinearLayout>
 
+    <!--
+    <com.bruce.android.app.view.RefreshableView
+        android:id="@+id/refreshable_view"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_weight="1" >
+
+        <ListView
+            android:id="@+id/main_list_view1"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent" >
+        </ListView>
+    </com.bruce.android.app.view.RefreshableView>
+    -->
+
+    <com.bruce.android.app.view.PullToRefreshListView
+        android:id="@+id/frame_listview_news"
+        style="@style/widget_listview" />
 
 </LinearLayout>

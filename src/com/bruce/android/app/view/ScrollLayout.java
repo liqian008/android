@@ -124,7 +124,7 @@ public class ScrollLayout extends ViewGroup {
 			invalidate(); // Redraw the layout
 
 			if (mOnViewChangeListener != null) {
-				mOnViewChangeListener.OnViewChange(mCurScreen);
+				mOnViewChangeListener.onViewChange(mCurScreen);
 			}
 		}
 	}
@@ -135,7 +135,7 @@ public class ScrollLayout extends ViewGroup {
 		scrollTo(whichScreen * getWidth(), 0);
 
 		if (mOnViewChangeListener != null) {
-			mOnViewChangeListener.OnViewChange(mCurScreen);
+			mOnViewChangeListener.onViewChange(mCurScreen);
 		}
 	}
 
@@ -270,6 +270,6 @@ public class ScrollLayout extends ViewGroup {
 	 * @author liux
 	 */
 	public interface OnViewChangeListener {
-		public void OnViewChange(int view);
+		public void onViewChange(int view);
 	}
 }

@@ -6,12 +6,15 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
 import com.bruce.android.R;
 import com.bruce.android.app.AppManager;
+import com.bruce.android.app.activity.JokeDetail;
 import com.bruce.android.app.activity.Main;
+import com.bruce.android.app.bean.RowItem;
 
 /**
  * 应用程序UI工具包：封装UI相关的一些操作
@@ -21,6 +24,8 @@ import com.bruce.android.app.activity.Main;
  * @created 2012-3-21
  */
 public class UIHelper {
+
+	protected static final String TAG = "UIHelper";
 
 	public final static int LISTVIEW_ACTION_INIT = 0x01;
 	public final static int LISTVIEW_ACTION_REFRESH = 0x02;
@@ -71,6 +76,15 @@ public class UIHelper {
 //		Intent intent = new Intent(context, ImageZoomDialog.class);
 //		intent.putExtra("img_url", imgUrl);
 //		context.startActivity(intent);
+	}
+	
+	public static void showJokeDetail(Context context, RowItem item) {
+		Intent intent = new Intent(context, JokeDetail.class);
+		intent.putExtra("text", item.getTitle());
+		intent.putExtra("author", item.getAuthor());
+		intent.putExtra("date", item.getDate());
+		intent.putExtra("count",item.getCount());
+		context.startActivity(intent);
 	}
 
 	/**
@@ -180,9 +194,10 @@ public class UIHelper {
 		builder.setPositiveButton(R.string.sure,
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
+						Log.v(TAG, "exit");
 						dialog.dismiss();
 						// 退出
-						AppManager.getAppManager().AppExit(cont);
+						AppManager.getInstance().AppExit(cont);
 					}
 				});
 		builder.setNegativeButton(R.string.cancle,

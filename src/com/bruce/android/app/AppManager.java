@@ -5,6 +5,7 @@ import java.util.Stack;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
+import android.util.Log;
 
 /**
  * 应用程序Activity管理类：用于Activity管理和应用程序退出
@@ -14,6 +15,8 @@ import android.content.Context;
  */
 public class AppManager {
 	
+	private static final String TAG = "AppManager";
+	
 	private static Stack<Activity> activityStack;
 	private static AppManager instance;
 	
@@ -21,9 +24,10 @@ public class AppManager {
 	/**
 	 * 单一实例
 	 */
-	public static AppManager getAppManager(){
+	public static AppManager getInstance(){
 		if(instance==null){
 			instance=new AppManager();
+			activityStack = new Stack<Activity>();
 		}
 		return instance;
 	}
@@ -74,12 +78,14 @@ public class AppManager {
 	 * 结束所有Activity
 	 */
 	public void finishAllActivity(){
-		for (int i = 0, size = activityStack.size(); i < size; i++){
-            if (null != activityStack.get(i)){
-            	activityStack.get(i).finish();
-            }
-	    }
-		activityStack.clear();
+		if(activityStack!=null){
+			for (int i = 0, size = activityStack.size(); i < size; i++){
+	            if (null != activityStack.get(i)){
+	            	activityStack.get(i).finish();
+	            }
+		    }
+			activityStack.clear();
+		}
 	}
 	/**
 	 * 退出应用程序
@@ -90,6 +96,9 @@ public class AppManager {
 			ActivityManager activityMgr= (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
 			activityMgr.restartPackage(context.getPackageName());
 			System.exit(0);
-		} catch (Exception e) {	}
+		} catch (Exception e) {
+			Log.v(TAG, "exception:");
+			e.printStackTrace();
+		}
 	}
 }
